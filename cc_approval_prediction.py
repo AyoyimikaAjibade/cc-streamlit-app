@@ -335,7 +335,7 @@ def full_pipeline(df):
 ############################# Streamlit ############################
 
 st.write("""
-# Credit card approval prediction
+# Credit card approval prediction Aplication
 This app predicts if an applicant will be approved for a credit card or not. Just fill in the following information and click on the Predict button.
 """)
 
@@ -563,8 +563,8 @@ logger = logging.getLogger(__name__)
 
 
 def make_prediction():
-    bucket_name = "creditapplipred"
-    key = "xgboost_classifier_model.sav"
+    bucket_name = "creditcardapprovalmodel"
+    key = "gradient_boosting_model.sav"
 
     client = boto3.client(
         "s3",
