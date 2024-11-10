@@ -22,9 +22,9 @@ import logging
 from botocore.exceptions import ClientError
 
 
-train_original = pd.read_csv('datasets/train.csv')
+train_original = pd.read_csv('https://raw.githubusercontent.com/AyoyimikaAjibade/credit-card-approval-prediction/refs/heads/main/datasets/train.csv')
 
-test_original = pd.read_csv('datasets/test.csv')
+test_original = pd.read_csv('https://raw.githubusercontent.com/AyoyimikaAjibade/credit-card-approval-prediction/refs/heads/main/datasets/test.csv')
 
 full_data = pd.concat([train_original, test_original], axis=0)
 
