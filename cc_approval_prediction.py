@@ -583,8 +583,8 @@ def make_prediction():
             client.download_fileobj(Fileobj=fp, Bucket=bucket_name, Key=key)
             logger.info("Successfully downloaded the file")
             fp.seek(0)
+            logger.info(f"Error === {model}")
             model = joblib.load(fp)
-            logger.info(f"Error {model}")
             logger.info("Successfully loaded the model")
 
         return model.predict(profile_to_pred_prep)
