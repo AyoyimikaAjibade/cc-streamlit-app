@@ -576,12 +576,12 @@ def make_prediction():
         # Test S3 access 
         logger.info(f"Attempting to list objects in {bucket_name}")
         response = client.list_objects_v2(Bucket=bucket_name, MaxKeys=1)
-        logger.info(f'RESPONSE: {response}')
         logger.info("Successfully listed bucket contents")
 
         logger.info(f"Attempting to download {key} from {bucket_name}")
         with tempfile.TemporaryFile() as fp:
-            client.download_fileobj(Fileobj=fp, Bucket=bucket_name, Key=key)
+            response = client.download_fileobj(Fileobj=fp, Bucket=bucket_name, Key=key)
+            logger.info(f'RESPONSE: {response}')
             logger.info("Successfully downloaded the file")
             fp.seek(0)
             model = joblib.load(fp)
