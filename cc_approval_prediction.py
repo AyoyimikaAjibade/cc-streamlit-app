@@ -10,6 +10,7 @@ from sklearn.ensemble import GradientBoostingClassifier
 from imblearn.over_sampling import SMOTE
 # from secret import access_key, secret_access_key
 import joblib
+import os
 
 #libraries we have not already seen
 import streamlit as st
@@ -580,16 +581,28 @@ def make_prediction():
 
         logger.info(f"Attempting to download {key} from {bucket_name}")
         with tempfile.TemporaryFile() as fp:
-            try:
-                client.download_fileobj(Fileobj=fp, Bucket=bucket_name, Key=key)
-                logger.info("Successfully downloaded the file")
-            except Exception as e:
-                logger.error(f"Failed to download the file: {e}")
-                st.error(f"Failed to download the file: {e}")
-                return None
+            # Debugging: Check if temp file is created
+            logger.debug("Temporary file created successfully")
+
+            # Download the file from S3 to a temporary file
+            client.download_fileobj(Fileobj=fp, Bucket=bucket_name, Key=key)
+            logger.info("Successfully downloaded the file from S3")
+
+            # Debugging: Log file size
+            fp.seek(0, os.SEEK_END)
+            logger.debug(f"Downloaded file size: {fp.tell()} bytes")
+
+            # Reset the file pointer and load the model
             fp.seek(0)
+            logger.debug("Loading model using joblib...")
             model = joblib.load(fp)
             logger.info("Successfully loaded the model")
+            # client.download_fileobj(Fileobj=fp, Bucket=bucket_name, Key=key)
+            # logger.info("Successfully downloaded the file")
+
+            # fp.seek(0)
+            # model = joblib.load(fp)
+            # logger.info("Successfully loaded the model")
 
         return model.predict(profile_to_pred_prep)
     except ClientError as e:
@@ -605,7 +618,7 @@ def make_prediction():
             st.error(f"The key {key} does not exist in the bucket.")
         return None
     except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
+        logger.error(f"Unexpected error: {str(e)}", exc_info=True)
         st.error(f"An unexpected error occurred: {str(e)}")
         return None
 
