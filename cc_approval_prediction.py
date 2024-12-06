@@ -581,28 +581,18 @@ def make_prediction():
 
         logger.info(f"Attempting to download {key} from {bucket_name}")
         with tempfile.TemporaryFile() as fp:
-            # Debugging: Check if temp file is created
-            logger.debug("Temporary file created successfully")
-
-            # Download the file from S3 to a temporary file
             client.download_fileobj(Fileobj=fp, Bucket=bucket_name, Key=key)
-            logger.info("Successfully downloaded the file from S3")
+            logger.info("Successfully downloaded the file")
 
-            # Debugging: Log file size
             fp.seek(0, os.SEEK_END)
-            logger.debug(f"Downloaded file size: {fp.tell()} bytes")
+            file_size = fp.tell()
+            logger.debug(f"Downloaded file size: {file_size} bytes")
+            if file_size == 0:
+                logger.info("Downloaded file is empty or corrupted.")
 
-            # Reset the file pointer and load the model
             fp.seek(0)
-            logger.debug("Loading model using joblib...")
             model = joblib.load(fp)
             logger.info("Successfully loaded the model")
-            # client.download_fileobj(Fileobj=fp, Bucket=bucket_name, Key=key)
-            # logger.info("Successfully downloaded the file")
-
-            # fp.seek(0)
-            # model = joblib.load(fp)
-            # logger.info("Successfully loaded the model")
 
         return model.predict(profile_to_pred_prep)
     except ClientError as e:
