@@ -10,7 +10,6 @@ from sklearn.ensemble import GradientBoostingClassifier
 from imblearn.over_sampling import SMOTE
 # from secret import access_key, secret_access_key
 import joblib
-import os
 
 #libraries we have not already seen
 import streamlit as st
@@ -574,22 +573,16 @@ def make_prediction():
     )
 
     try:
-        # Test S3 access
+        # Test S3 access 
         logger.info(f"Attempting to list objects in {bucket_name}")
         response = client.list_objects_v2(Bucket=bucket_name, MaxKeys=1)
+        logger.info(f'RESPONSE: {response}')
         logger.info("Successfully listed bucket contents")
 
         logger.info(f"Attempting to download {key} from {bucket_name}")
         with tempfile.TemporaryFile() as fp:
             client.download_fileobj(Fileobj=fp, Bucket=bucket_name, Key=key)
             logger.info("Successfully downloaded the file")
-
-            fp.seek(0, os.SEEK_END)
-            file_size = fp.tell()
-            logger.debug(f"Downloaded file size: {file_size} bytes")
-            if file_size == 0:
-                logger.info("Downloaded file is empty or corrupted.")
-
             fp.seek(0)
             model = joblib.load(fp)
             logger.info("Successfully loaded the model")
