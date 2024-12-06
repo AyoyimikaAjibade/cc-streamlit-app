@@ -582,7 +582,7 @@ def make_prediction():
         with tempfile.TemporaryFile() as fp:
             client.download_fileobj(Fileobj=fp, Bucket=bucket_name, Key=key)
             logger.info("Successfully downloaded the file")
-            logger.info(f"Error === {joblib.load(fp)}")
+            logger.info(f"Error === {fp}")
             fp.seek(0)
             model = joblib.load(fp)
             logger.info("Successfully loaded the model")
