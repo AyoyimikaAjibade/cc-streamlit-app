@@ -580,9 +580,13 @@ def make_prediction():
 
         logger.info(f"Attempting to download {key} from {bucket_name}")
         with tempfile.TemporaryFile() as fp:
-            client.download_fileobj(Fileobj=fp, Bucket=bucket_name, Key=key)
-            logger.info("Successfully downloaded the file")
-            logger.info(f"Error === {fp}")
+            try:
+                client.download_fileobj(Fileobj=fp, Bucket=bucket_name, Key=key)
+                logger.info("Successfully downloaded the file")
+            except Exception as e:
+                logger.error(f"Failed to download the file: {e}")
+                st.error(f"Failed to download the file: {e}")
+                return None
             fp.seek(0)
             model = joblib.load(fp)
             logger.info("Successfully loaded the model")
