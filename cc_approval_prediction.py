@@ -573,20 +573,56 @@ def make_prediction():
     )
 
     try:
-        # Test S3 access 
+        # List bucket contents
         logger.info(f"Attempting to list objects in {bucket_name}")
-        client.list_objects_v2(Bucket=bucket_name, MaxKeys=1)
-        logger.info("Successfully listed bucket contents")
-
+        response = client.list_objects_v2(Bucket=bucket_name)
+        if 'Contents' in response:
+            logger.info("Successfully listed bucket contents:")
+            for obj in response['Contents']:
+                logger.info(f"- {obj['Key']}")
+        else:
+            logger.warning(f"No contents found in bucket {bucket_name}")
+            
+        # Download the model file
         logger.info(f"Attempting to download {key} from {bucket_name}")
-        with tempfile.TemporaryFile() as fp:
-            client.download_fileobj(Fileobj=fp, Bucket=bucket_name, Key=key)
+        with tempfile.NamedTemporaryFile() as fp:
+            client.download_fileobj(Bucket=bucket_name, Key=key, Fileobj=fp)
             logger.info("Successfully downloaded the file")
-            val = fp.read()
-            print(f'RESPONSE {val}')
-            fp.seek(0)
+            fp.seek(0)  # Reset file pointer
+
+            # Load the model
             model = joblib.load(fp)
             logger.info("Successfully loaded the model")
+
+        # Make predictions
+        predictions = model.predict(profile_to_pred_prep)
+        logger.info("Successfully made predictions")
+        
+        # If the file contains data, analyze rows
+        # For this example, assume profile_to_pred_prep is a DataFrame
+        if isinstance(profile_to_pred_prep, pd.DataFrame):
+            num_rows = len(profile_to_pred_prep)
+            logger.info(f"Number of rows in input data: {num_rows}")
+            if num_rows > 0:
+                last_row = profile_to_pred_prep.iloc[-1]
+                logger.info(f"Last row of input data: {last_row}")
+
+        return predictions
+    
+        # # Test S3 access 
+        # logger.info(f"Attempting to list objects in {bucket_name}")
+        # client.list_objects_v2(Bucket=bucket_name, MaxKeys=1)
+        # logger.info("Successfully listed bucket contents")
+
+        # logger.info(f"Attempting to download {key} from {bucket_name}")
+        # with tempfile.TemporaryFile() as fp:
+        #     client.download_fileobj(Fileobj=fp, Bucket=bucket_name, Key=key)
+        #     logger.info("Successfully downloaded the file")
+        #     val = fp.read()
+        #     print(f'RESPONSE {val}')
+        #     fp.seek(0)
+        #     model = joblib.load(fp)
+        #     logger.info("Successfully loaded the model")
 
         return model.predict(profile_to_pred_prep)
     except ClientError as e:
