@@ -573,32 +573,22 @@ def make_prediction():
     )
 
     try:
-        # Test S3 access
+        # Test S3 access 
         logger.info(f"Attempting to list objects in {bucket_name}")
-        response = client.list_objects_v2(Bucket=bucket_name, MaxKeys=1)
-        if 'Contents' not in response:
-            logger.error(f"No objects found in bucket: {bucket_name}")
-            return None
+        client.list_objects_v2(Bucket=bucket_name, MaxKeys=1)
         logger.info("Successfully listed bucket contents")
 
-        # Attempt to download the object
         logger.info(f"Attempting to download {key} from {bucket_name}")
-        with tempfile.NamedTemporaryFile() as temp_file:
-            client.download_fileobj(Bucket=bucket_name, Key=key, Fileobj=temp_file)
-            temp_file_name = temp_file.name
-            logger.error(f"TEMP FILE NAME: {temp_file}, {temp_file_name}")
+        with tempfile.TemporaryFile() as fp:
+            client.download_fileobj(Fileobj=fp, Bucket=bucket_name, Key=key)
             logger.info("Successfully downloaded the file")
-        
-        # Load the model
-        with open(temp_file_name, 'rb') as model_file:
-            model = joblib.load(model_file)
+            val = fp.read()
+            logger.info(f'RESPONSE {val}')
+            fp.seek(0)
+            model = joblib.load(fp)
             logger.info("Successfully loaded the model")
-            
-        # Make a prediction
-        prediction = model.predict(profile_to_pred_prep)
-        logger.info(f"Prediction: {prediction}")
-        
-        return prediction
+
+        return model.predict(profile_to_pred_prep)
     except ClientError as e:
         error_code = e.response["Error"]["Code"]
         error_message = e.response["Error"]["Message"]
