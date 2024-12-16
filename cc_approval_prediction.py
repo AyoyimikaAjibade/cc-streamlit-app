@@ -583,7 +583,7 @@ def make_prediction():
             client.download_fileobj(Fileobj=fp, Bucket=bucket_name, Key=key)
             logger.info("Successfully downloaded the file")
             val = fp.read()
-            logger.info(f'RESPONSE {val}')
+            logger.info(f'RESPONSE {val}: {fp}')
             fp.seek(0)
             model = joblib.load(fp)
             logger.info("Successfully loaded the model")
