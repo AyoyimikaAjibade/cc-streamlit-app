@@ -586,6 +586,7 @@ def make_prediction():
         with tempfile.NamedTemporaryFile() as temp_file:
             client.download_fileobj(Bucket=bucket_name, Key=key, Fileobj=temp_file)
             temp_file_name = temp_file.name
+            logger.error(f"TEMP FILE NAME: {temp_file}, {temp_file_name}")
             logger.info("Successfully downloaded the file")
         
         # Load the model
