@@ -576,22 +576,28 @@ def make_prediction():
         # Test S3 access
         logger.info(f"Attempting to list objects in {bucket_name}")
         response = client.list_objects_v2(Bucket=bucket_name, MaxKeys=1)
+        if 'Contents' not in response:
+            logger.error(f"No objects found in bucket: {bucket_name}")
+            return None
         logger.info("Successfully listed bucket contents")
 
+        # Attempt to download the object
         logger.info(f"Attempting to download {key} from {bucket_name}")
-        with tempfile.TemporaryFile() as fp:
-            client.download_fileobj(Fileobj=fp, Bucket=bucket_name, Key=key)
-            
-            response = client.get_object(Bucket=bucket_name, Key=key)
-            model_content = response["Body"].read()
-            print('RESPONSE: {}'.format(model_content))
-            
+        with tempfile.NamedTemporaryFile() as temp_file:
+            client.download_fileobj(Bucket=bucket_name, Key=key, Fileobj=temp_file)
+            temp_file_name = temp_file.name
             logger.info("Successfully downloaded the file")
-            fp.seek(0)
-            model = joblib.load(fp)
+        
+        # Load the model
+        with open(temp_file_name, 'rb') as model_file:
+            model = joblib.load(model_file)
             logger.info("Successfully loaded the model")
-
-        return model.predict(profile_to_pred_prep)
+            
+        # Make a prediction
+        prediction = model.predict(profile_to_pred_prep)
+        logger.info(f"Prediction: {prediction}")
+        
+        return prediction
     except ClientError as e:
         error_code = e.response["Error"]["Code"]
         error_message = e.response["Error"]["Message"]
