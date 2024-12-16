@@ -561,6 +561,7 @@ lottie_loading_an = load_lottieurl(
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+from io import BytesIO
 
 def make_prediction():
     bucket_name = "creditcardapprovalmodel"
@@ -579,16 +580,24 @@ def make_prediction():
         logger.info("Successfully listed bucket contents")
 
         logger.info(f"Attempting to download {key} from {bucket_name}")
-        with tempfile.TemporaryFile() as fp:
-            client.download_fileobj(Fileobj=fp, Bucket=bucket_name, Key=key)
-            logger.info("Successfully downloaded the file")
-            val = fp.read()
-            logger.info(f'RESPONSE {val}: {fp}')
-            fp.seek(0)
-            model = joblib.load(fp)
-            logger.info("Successfully loaded the model")
+        # with tempfile.TemporaryFile() as fp:
+        #     client.download_fileobj(Fileobj=fp, Bucket=bucket_name, Key=key)
+        #     logger.info("Successfully downloaded the file")
+        #     val = fp.read()
+        #     logger.info(f'RESPONSE {val}: {fp}')
+        #     fp.seek(0)
+        #     model = joblib.load(fp)
+        #     logger.info("Successfully loaded the model")
 
-        return model.predict(profile_to_pred_prep)
+        # return model.predict(profile_to_pred_prep)
+        response = client.get_object(Bucket=bucket_name, Key=key)
+        model_content = response["Body"].read()
+        model = joblib.load(BytesIO(model_content))
+        logger.success("Model successfully loaded from S3")
+        prediction = model.predict(profile_to_pred_prep)
+        
+        return prediction[0]
+    
     except ClientError as e:
         error_code = e.response["Error"]["Code"]
         error_message = e.response["Error"]["Message"]
